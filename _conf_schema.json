@@ -1,0 +1,28 @@
+{
+  "player_name": {
+    "description": "与 AI 互动时使用的玩家称呼留空将默认采用消息平台昵称",
+    "type": "string",
+    "default": ""
+  },
+  "heroine_name": {
+    "description": "女主角在剧情中的名字",
+    "type": "string",
+    "default": "恋恋"
+  },
+  "custom_character_prompt": {
+    "description": "可选：为恋恋编写自定义人物设定，会作为系统提示词追加（留空则沿用当前会话的人设）",
+    "type": "string",
+    "default": "",
+    "ui:widget": "textarea"
+  },
+  "enable_explicit_mode": {
+    "description": "开启后，好感度满值时允许触发语言色情互动（默认关闭）",
+    "type": "bool",
+    "default": false
+  },
+  "status_card_use_t2i": {
+    "description": "使用官方 t2i 服务渲染状态卡片（关闭后以纯文本展示）",
+    "type": "bool",
+    "default": true
+  }
+}
