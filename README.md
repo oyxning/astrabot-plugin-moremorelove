@@ -1,80 +1,129 @@
-# MoreMoreLove
+# MoreMoreLove — AstrBot Galgame 插件
 
-⚠️ 本插件包含 R18 向恋爱与情趣内容，请在遵守所在地法律法规及各平台规范的前提下再行安装与使用。
+> ⚠️ **内容提醒**：本插件含成人向恋爱与情趣元素，仅供 **成年人** 在遵守所在地法律法规与平台规范的前提下使用。
 
-## 插件简介
+---
 
-MoreMoreLove 是一款面向 AstrBot 的 Galgame 插件，提供恋恋（支持自定义昵称）这一核心角色，允许你在工作与娱乐之间自由切换。插件内置「经典剧本模式」与「AI 行为模式」，即使未配置任何 LLM 也可以完整体验恋恋的恋爱流程。
+## 简介
 
-## 核心特性
+**MoreMoreLove** 是面向 **AstrBot** 的“恋爱互动（Galgame）”插件。  
+它提供一位可自定义昵称的女主角（默认名：**恋恋**），并支持两种游玩方式：
 
-- `galmenu`：展示基础操作与行动菜单，便于快速了解当前可执行的指令。
-- `galstart` / `galexit`：在工作模式与 Gal 模式之间随时切换，保障日常消息不受影响。
-- 好感度系统：每一次互动都会影响恋恋对你的心动指数，达到 200 后可（在允许的情况下）解锁情趣系统。
-- `galact`：自定义行动，AI 模式下即时生成剧情；经典模式则调用精心编排的多结局剧本。
-- `galintimacy`：在好感满值且显式开启后触发语言色情互动，AI 与经典模式均有独立剧情。
-- `galstatus`：通过官方 t2i 渲染恋恋的状态卡片（生成失败时自动降级为文本）。
-- 实时环境系统：内置 `galtime` / `galweather` 指令，随时获取现实时间与天气情报。
-- `galpure`：**<span style="color:red">纯色情模式，仅限成年人。激活后恋恋将无条件提供露骨的动作描写，不建议在公共或未成年人环境中使用。</span>**
-- 数据持久化：所有进度均存储在插件数据目录，可跨平台、跨会话延续故事。
+- **AI 行为模式**：接入你的 LLM 服务，依据玩家“行动”即时生成剧情、心情与好感变化；
+- **经典剧本模式**：内置多分支剧情，即使未配置 LLM 也能完整体验。
+
+两种模式间支持**自动回退**，保证不中断的恋爱体验。
+
+---
+
+## 主要特性
+
+- **一键菜单**：`galmenu` 展示可用指令与示例，开箱即玩  
+- **模式切换**：`galstart / galexit` 在日常与 Gal 模式间进出  
+- **好感系统**：互动会增减好感（满值默认 **200**），影响可用桥段  
+- **自定义行动**：`galact <行动>` 由 AI/剧本生成“下一步会发生什么”  
+- **亲密解锁（可选）**：满足条件后用 `galintimacy` 解锁更亲密互动（需显式开启）  
+- **环境感知**：`galtime / galweather` 引入现实时间与天气，增强临场感  
+- **状态卡片**：`galstatus` 输出状态文本；如启用 t2i，可生成“恋恋状态卡片”图片  
+- **纯成人模式（可选）**：`galpure on/off/status`（需在配置中允许；仅供成年人）
+
+---
+
+## 安装与启动
+
+1. 将插件目录放到：`/AstrBot/data/plugins/astrabot-plugin-moremorelove/`  
+2. 重载/重启 AstrBot（或在后台“重载插件”）使其识别 `metadata.yaml` 与配置
+
+依赖：仅使用 AstrBot 官方插件 API；天气数据默认来源 `wttr.in` 公共接口
+
+---
+
+## 快速上手
+
+1. 发送 `galmenu` 查看指令与示例  
+2. 发送 `galstart` 进入 Gal 模式  
+3. 试试以下行动：
+   - `galpark`（与恋恋去公园散步）
+   - `galcinema`（邀请恋恋看电影）
+   - `galact 准备一顿烛光晚餐`（完全自定义）
+4. 用 `galstatus` 查看好感与近期互动摘要
+
+提示：若已配置 LLM → 使用 **AI 行为模式**；无法连接模型时自动回落到 **经典剧本模式**。
+
+---
 
 ## 指令一览
 
-| 指令 | 说明 |
-| --- | --- |
-| `galmenu` | 查看菜单与操作提示 |
-| `galstart` / `galexit` | 开启或退出 Gal 模式 |
-| `galstatus` | 查看当前状态（优先尝试 t2i 卡片） |
-| `galtime` | 查看当前主时区的实时时间 |
-| `galweather [地点]` | 查看天气，地点省略时使用默认配置 |
-| `galreset` | 重置当前会话的恋爱进度 |
-| `galpure <on/off/status>` | 开启、关闭或查看纯色情模式状态（需配置允许） |
-| `galpark` / `galcinema` | 预设恋爱行动示例 |
-| `galact <行动>` | 自定义行动，例如 `galact 准备烛光晚餐` |
-| `galintimacy` | 条件满足且开关开启时执行情趣互动 |
+- **基础**
+  - `galmenu`：展示指令与说明  
+  - `galstart` / `galexit`：进入 / 退出 Gal 模式  
+  - `galstatus`：查看当前状态（文本或 t2i 卡片）  
+  - `galreset`：重置会话（清空好感、历史等）
 
-以上指令默认使用简体中文输出，必要时可在 `_conf_schema.json` 中自定义表现。
+- **环境信息**
+  - `galtime`：查看现实世界时间（按配置时区）  
+  - `galweather [地点]`：查询天气（留空用默认城市）
 
-## 可配置项
+- **行动 & 剧情**
+  - `galpark`：公园散步  
+  - `galcinema`：一起看电影  
+  - `galact <行动>`：自定义行动，由 AI/剧本生成结果  
+  - `galintimacy`：满足条件时触发更亲密的桥段（需显式开启）
 
-| 配置键 | 说明 |
-| --- | --- |
-| `player_name` | 玩家在剧情中的称呼，留空则自动沿用消息平台昵称 |
-| `heroine_name` | 女主角名字，默认 “恋恋” |
-| `custom_character_prompt` | 可选的人设补充/背景设定，将作为系统提示词追加 |
-| `enable_ai_behavior` | 是否启用基于 LLM 的 AI 行为系统，关闭后改用经典剧本 |
-| `allow_pure_erotic_mode` | 是否允许通过指令开启纯色情模式（默认关闭，仅限成年人） |
-| `erotic_intensity` | 纯色情模式默认强度，`soft` 更含蓄、`strong` 为露骨描写 |
-| `enable_explicit_mode` | 是否允许好感满值后的语言色情互动（默认关闭） |
-| `status_card_use_t2i` | 是否使用官方 t2i 渲染状态卡片，关闭后显示纯文本 |
-| `time_zone` | 自定义主时区名称，例如 `Asia/Shanghai` |
-| `weather_location` | 默认天气查询城市，留空时使用上海 |
-| `weather_refresh_minutes` | 天气缓存时间（分钟），最少 10 分钟 |
+- **成人模式（可选）**
+  - `galpure on/off/status`：开启 / 关闭 / 查看状态  
+  - 仅在合规场景下使用；需先在配置中允许相关功能。
 
+---
 
-更新配置后，请通过 AstrBot 后台重载插件或重启 AstrBot 以确保生效。
+## 配置
 
-## 情趣与纯色情模式说明
-- 当好感度达到 200 且 `enable_explicit_mode` 为 true 时，可自动或手动触发语言色情互动。
-- 默认（非纯色情）场景以暧昧浪漫的软色情为主，尽量避免触发模型审查。
-- 纯色情模式 `galpure on`：
-  - 当 `erotic_intensity = soft` 时，描写亲密触碰与欲望暗示，但避免过度具体的器官、插入或体液描述。
-  - 当 `erotic_intensity = strong` 时，允许露骨的动作描写，仅在模型与平台允许的情况下启用。
-- 若未开启 `enable_explicit_mode`，系统仅提醒好感满值，不会进入色情剧情。
-- **<span style="color:red">强色情（`strong`）更容易触发模型或平台拦截，请确保环境无未成年人并遵守相关规范。</span>**
+下列为常用配置项（字段名与默认值以实际文件为准）：
 
-## 双模式设计
+| 键名 | 类型 | 说明 | 默认值 |
+|---|---|---|---|
+| `player_name` | string | 玩家称呼；留空时自动使用消息平台昵称 | `""` |
+| `heroine_name` | string | 女主角名字 | `"恋恋"` |
+| `custom_character_prompt` | string/text | 追加的人设提示词 | `""` |
+| `enable_ai_behavior` | bool | 是否启用 AI 行为模式 | `true` |
+| `allow_pure_erotic_mode` | bool | 允许 `galpure` 开关成人模式 | `false` |
+| `erotic_intensity` | string | 成人模式强度：`soft` / `strong` | `"soft"` |
+| `enable_explicit_mode` | bool | 满好感后是否允许亲密互动（`galintimacy`） | `false` |
+| `status_card_use_t2i` | bool | `galstatus` 是否尝试用 t2i 生成图卡 | `true` |
+| `time_zone` | string | 主时区（示例：`Asia/Shanghai`） | `"Asia/Shanghai"` |
+| `weather_location` | string | 天气默认城市；留空使用 `Shanghai` | `""` |
+| `weather_refresh_minutes` | int | 天气缓存分钟数（最小值建议 ≥ 10） | `60` |
 
-- **AI 行为模式**：依赖已配置的 LLM 提供商，恋恋会像现实女友一样记住细节、撒娇或提出真实需求。
-- **经典剧本模式**：无需 AI 即可游玩，内置多套剧情模板，包含正向/负向反馈及亲密段落，适合离线或暂未配置模型的用户。
+---
 
-当启用 AI 但暂时无法连接模型时，插件会自动回落到经典剧本，确保体验不中断。
+## AI 行为模式的输出结构
 
-## 开发信息
+当执行 `galact <行动>` 等需要 AI 推理的指令时，插件会要求模型以 **JSON 对象** 回复，示例：
 
-- 作者：LumineStory  
-- 仓库：<https://github.com/oyxning/astrabot-plugin-moremorelove>  
-- 依赖：仅使用 AstrBot 官方插件 API，无需额外第三方库  
-- 许可协议：MIT License（见根目录 `LICENSE`）
+    {
+      "narration": "string — 第一人称、口语化的自然叙述，展现动作与情绪",
+      "favorability_delta": -20,
+      "mood": "positive | neutral | negative",
+      "player_feedback": "string — 贴心建议/撒娇提醒",
+      "intimacy_signal": false
+    }
 
-如遇问题，欢迎查看 AstrBot 日志或提交 issue 反馈。愿你和恋恋拥有更多甜蜜瞬间！
+- 插件会据此更新好感度、渲染对话与后续分支；  
+- 如果模型不可用，将自动使用经典剧本生成等效字段。
+
+---
+
+## 常见问题（FAQ）
+
+- **无法连接到模型**  
+  确认已正确配置 LLM 相关环境与密钥。若不可用，插件会自动回落到经典剧本模式，仍可继续游玩。
+
+- **语法/格式相关错误**  
+  若自行修改配置或提示词，请确保引号、括号配对正确；建议使用 IDE 的语法高亮与格式化功能。
+
+---
+
+## 声明
+
+- 本插件仅用于合法合规、成年人自愿的娱乐场景；请自行判断与设置内容强度。  
+- 请勿在未成年人可接触的环境中启用成人向功能。
