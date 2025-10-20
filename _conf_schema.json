@@ -25,6 +25,16 @@
     "type": "bool",
     "default": false
   },
+  "erotic_intensity": {
+    "description": "纯色情模式默认使用的描述强度（软色情更适合模型通过审查）",
+    "type": "string",
+    "enum": [
+      {"value": "soft", "label": "软色情（保守）"},
+      {"value": "strong", "label": "强色情（露骨）"}
+    ],
+    "default": "soft",
+    "ui:widget": "select"
+  },
   "enable_explicit_mode": {
     "description": "开启后，好感度满值时允许触发语言色情互动（默认关闭）",
     "type": "bool",
@@ -34,5 +44,21 @@
     "description": "使用官方 t2i 服务渲染状态卡片（关闭后以纯文本展示）",
     "type": "bool",
     "default": true
+  },
+  "time_zone": {
+    "description": "Real-world timezone identifier, e.g. Asia/Shanghai",
+    "type": "string",
+    "default": "Asia/Shanghai"
+  },
+  "weather_location": {
+    "description": "Default city or region for weather lookups (blank uses Shanghai)",
+    "type": "string",
+    "default": ""
+  },
+  "weather_refresh_minutes": {
+    "description": "Minutes to cache weather responses (minimum 10 minutes)",
+    "type": "integer",
+    "default": 60,
+    "minimum": 10
   }
 }

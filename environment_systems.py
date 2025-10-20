@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional, Tuple
 from urllib import parse, request
 
@@ -29,24 +29,25 @@ class RealWorldTimeSystem:
     """Handles time-zone aware timestamps for the plugin."""
 
     def __init__(self, timezone: str = "Asia/Shanghai"):
-        self._timezone_name = timezone
-        self._tz = self._safe_zone_info(timezone)
+        self._timezone_name, self._tz = self._safe_zone_info(timezone)
 
     @staticmethod
-    def _safe_zone_info(tz_name: str):
+    def _safe_zone_info(tz_name: str) -> Tuple[str, Optional["ZoneInfo"]]:
         if ZoneInfo is None:
-            return None
+            return "UTC", None
         try:
-            return ZoneInfo(tz_name)
+            return tz_name, ZoneInfo(tz_name)
         except Exception:
-            return ZoneInfo("UTC")
+            try:
+                return "UTC", ZoneInfo("UTC")
+            except Exception:  # pragma: no cover - extremely unlikely on stdlib
+                return "UTC", None
 
     def set_timezone(self, timezone: str):
-        self._timezone_name = timezone
-        self._tz = self._safe_zone_info(timezone)
+        self._timezone_name, self._tz = self._safe_zone_info(timezone)
 
     def get_summary(self) -> str:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if self._tz is not None:
             now = now.astimezone(self._tz)
         weekday = WEEKDAY_NAMES[now.weekday()]
@@ -59,7 +60,7 @@ class WeatherInfo:
     description: str
     temperature_c: Optional[float] = None
     feels_like_c: Optional[float] = None
-    updated_at: datetime = datetime.utcnow()
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def brief(self) -> str:
         temp_part = ""
@@ -89,7 +90,7 @@ class RealWorldWeatherSystem:
     async def get_weather(self, location: Optional[str] = None) -> WeatherInfo:
         loc = (location or self._default_location or "Shanghai").strip()
         cache_key = loc.lower()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         cached = self._cache.get(cache_key)
         if cached and now - cached[0] < timedelta(minutes=self._refresh):
             return cached[1]
@@ -129,6 +130,7 @@ class RealWorldWeatherSystem:
                 description=description,
                 temperature_c=temp,
                 feels_like_c=feels_like,
+                updated_at=datetime.now(timezone.utc),
             )
         except Exception:
             return WeatherInfo(location=location, description="天气数据解析失败")

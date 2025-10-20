@@ -768,7 +768,7 @@ class AIBehaviorEngine(BaseBehaviorEngine):
     "moremorelove",
     "LumineStory",
     "基于 AI 的 Galgame 互动体验",
-    "0.2.0",
+    "0.3.0",
     "https://github.com/oyxning/astrabot-plugin-moremorelove",
 )
 class MoreMoreLovePlugin(Star):

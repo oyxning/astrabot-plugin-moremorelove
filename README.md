@@ -14,6 +14,7 @@ MoreMoreLove 是一款面向 AstrBot 的 Galgame 插件，提供恋恋（支持�
 - `galact`：自定义行动，AI 模式下即时生成剧情；经典模式则调用精心编排的多结局剧本。
 - `galintimacy`：在好感满值且显式开启后触发语言色情互动，AI 与经典模式均有独立剧情。
 - `galstatus`：通过官方 t2i 渲染恋恋的状态卡片（生成失败时自动降级为文本）。
+- 实时环境系统：内置 `galtime` / `galweather` 指令，随时获取现实时间与天气情报。
 - `galpure`：**<span style="color:red">纯色情模式，仅限成年人。激活后恋恋将无条件提供露骨的动作描写，不建议在公共或未成年人环境中使用。</span>**
 - 数据持久化：所有进度均存储在插件数据目录，可跨平台、跨会话延续故事。
 
@@ -24,6 +25,8 @@ MoreMoreLove 是一款面向 AstrBot 的 Galgame 插件，提供恋恋（支持�
 | `galmenu` | 查看菜单与操作提示 |
 | `galstart` / `galexit` | 开启或退出 Gal 模式 |
 | `galstatus` | 查看当前状态（优先尝试 t2i 卡片） |
+| `galtime` | 查看当前主时区的实时时间 |
+| `galweather [地点]` | 查看天气，地点省略时使用默认配置 |
 | `galreset` | 重置当前会话的恋爱进度 |
 | `galpure <on/off/status>` | 开启、关闭或查看纯色情模式状态（需配置允许） |
 | `galpark` / `galcinema` | 预设恋爱行动示例 |
@@ -36,22 +39,29 @@ MoreMoreLove 是一款面向 AstrBot 的 Galgame 插件，提供恋恋（支持�
 
 | 配置键 | 说明 |
 | --- | --- |
-| `player_name` | 玩家称呼，留空则自动沿用消息平台昵称 |
+| `player_name` | 玩家在剧情中的称呼，留空则自动沿用消息平台昵称 |
 | `heroine_name` | 女主角名字，默认 “恋恋” |
 | `custom_character_prompt` | 可选的人设补充/背景设定，将作为系统提示词追加 |
 | `enable_ai_behavior` | 是否启用基于 LLM 的 AI 行为系统，关闭后改用经典剧本 |
 | `allow_pure_erotic_mode` | 是否允许通过指令开启纯色情模式（默认关闭，仅限成年人） |
+| `erotic_intensity` | 纯色情模式默认强度，`soft` 更含蓄、`strong` 为露骨描写 |
 | `enable_explicit_mode` | 是否允许好感满值后的语言色情互动（默认关闭） |
 | `status_card_use_t2i` | 是否使用官方 t2i 渲染状态卡片，关闭后显示纯文本 |
+| `time_zone` | 自定义主时区名称，例如 `Asia/Shanghai` |
+| `weather_location` | 默认天气查询城市，留空时使用上海 |
+| `weather_refresh_minutes` | 天气缓存时间（分钟），最少 10 分钟 |
+
 
 更新配置后，请通过 AstrBot 后台重载插件或重启 AstrBot 以确保生效。
 
 ## 情趣与纯色情模式说明
-
 - 当好感度达到 200 且 `enable_explicit_mode` 为 true 时，可自动或手动触发语言色情互动。
-- AI 模式会结合上下文生成全新段落；经典模式提供多段细腻描写，均确保双方成年、双向自愿。
+- 默认（非纯色情）场景以暧昧浪漫的软色情为主，尽量避免触发模型审查。
+- 纯色情模式 `galpure on`：
+  - 当 `erotic_intensity = soft` 时，描写亲密触碰与欲望暗示，但避免过度具体的器官、插入或体液描述。
+  - 当 `erotic_intensity = strong` 时，允许露骨的动作描写，仅在模型与平台允许的情况下启用。
 - 若未开启 `enable_explicit_mode`，系统仅提醒好感满值，不会进入色情剧情。
-- **<span style="color:red">纯色情模式（`galpure on`）不受好感度与常规开关限制，所有行动都会立刻升级为露骨描写，请确认周围环境安全、无未成年人后再启动。</span>**
+- **<span style="color:red">强色情（`strong`）更容易触发模型或平台拦截，请确保环境无未成年人并遵守相关规范。</span>**
 
 ## 双模式设计
 
