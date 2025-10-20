@@ -552,7 +552,7 @@ class AIBehaviorEngine(BaseBehaviorEngine):
     ) -> str:
         player_name = self.plugin._player_display_name(event)
         heroine_name = self.plugin._heroine_name()
-        history_block = self._history_excerpt(state.history)
+        history_block = self.plugin._history_excerpt(state.history)
         stage_summary = (
             f"恋爱阶段：{profile['name']}，描述：{profile['stage_desc']}。"
             f"{heroine_name}对玩家的信任指标：{profile['trust_signal']}。"
