@@ -93,7 +93,7 @@ CLASSIC_ACTION_LIBRARY: Dict[str, List[Dict[str, Any]]] = {
         {
             "delta": 8,
             "mood": "positive",
-            "feedback": "恋恋喜欢你细心的陪伴，她说晚风让人想牵手。",
+            "feedback": "{heroine}喜欢你细心的陪伴，她说晚风让人想牵手。",
             "intimacy": False,
             "narration": (
                 "{hero}挽着{player}的手，在公园的梧桐下慢慢散步。{stage_desc}"
@@ -103,7 +103,7 @@ CLASSIC_ACTION_LIBRARY: Dict[str, List[Dict[str, Any]]] = {
         {
             "delta": 6,
             "mood": "positive",
-            "feedback": "恋恋回去后发消息问你，下次能不能换她准备零食。",
+            "feedback": "{heroine}回去后发消息问你，下次能不能换她准备零食。",
             "intimacy": False,
             "narration": (
                 "黄昏的操场被余晖染成暖色，{hero}靠在你肩上听你分享日常，"
@@ -113,7 +113,7 @@ CLASSIC_ACTION_LIBRARY: Dict[str, List[Dict[str, Any]]] = {
         {
             "delta": -4,
             "mood": "negative",
-            "feedback": "她似乎还在介意，你要不要换个方式表达关心？",
+            "feedback": "{heroine}似乎还在介意，你要不要换个方式表达关心？",
             "intimacy": False,
             "narration": (
                 "{player}讲电话讲得太久，{hero}闷闷地踢着落叶。"
@@ -125,7 +125,7 @@ CLASSIC_ACTION_LIBRARY: Dict[str, List[Dict[str, Any]]] = {
         {
             "delta": 9,
             "mood": "positive",
-            "feedback": "恋恋笑着说，下次换她挑一部你喜欢的类型。",
+            "feedback": "{heroine}笑着说，下次换她挑一部你喜欢的类型。",
             "intimacy": True,
             "narration": (
                 "{hero}把爆米花递到你唇边，低声吐槽剧情。电影散场时，她自然地牵住你，"
@@ -135,7 +135,7 @@ CLASSIC_ACTION_LIBRARY: Dict[str, List[Dict[str, Any]]] = {
         {
             "delta": 4,
             "mood": "neutral",
-            "feedback": "她说只要和你在一起，不管看什么都行，但别忘了和她讨论感想。",
+            "feedback": "{heroine}说只要和你在一起，不管看什么都行，但别忘了和她讨论感想。",
             "intimacy": False,
             "narration": (
                 "你们抢到了情侣座，{hero}偷偷靠在你肩膀上。电影一般般，可她轻声的吐槽让你觉得比大银幕更动人。"
@@ -145,7 +145,7 @@ CLASSIC_ACTION_LIBRARY: Dict[str, List[Dict[str, Any]]] = {
         {
             "delta": -6,
             "mood": "negative",
-            "feedback": "恋恋想听你真实的想法，别总是敷衍几句就躲过去。",
+            "feedback": "{heroine}想听你真实的想法，别总是敷衍几句就躲过去。",
             "intimacy": False,
             "narration": (
                 "影片结束后，你敷衍地说“还行吧”，{hero}沉默着收拾外套。"
@@ -260,7 +260,8 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
             narration = template["narration"].format(
                 hero=hero, player=player, stage_desc=profile["stage_desc"]
             )
-            feedback = f"{template['feedback']} {profile['care_hint']}"
+            feedback_text = template["feedback"].format(heroine=hero)
+            feedback = f"{feedback_text} {profile['care_hint']}"
             intimacy_signal = bool(template["intimacy"]) and profile["intimacy_bias"] > 0.2
             mood = template["mood"]
         else:
@@ -323,7 +324,7 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
         if score <= -1:
             base_delta = -8
             mood = "negative"
-            feedback = "恋恋想让你多注意她的情绪，藏在心里的事要说出来。"
+            feedback = f"{heroine}想让你多注意她的情绪，把藏在心里的事说出来。"
             narration = (
                 f"{player}提到“{action_text}”时有些犹豫，{heroine}捕捉到那一丝逃避，"
                 "她没有直接生气，只是提醒你别把她晾在原地。"
@@ -331,7 +332,7 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
         elif score == 0:
             base_delta = 2
             mood = "neutral"
-            feedback = "她感受到了你的努力，再多一点细节就会更打动她。"
+            feedback = f"{heroine}感受到了你的努力，再多一点细节就会更打动她。"
             narration = (
                 f"{heroine}认真听你谈“{action_text}”，眉眼里有思考。"
                 "她点点头，告诉你别太紧张，把想做的事情慢慢落实就好。"
@@ -339,7 +340,7 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
         elif score == 1:
             base_delta = 6
             mood = "positive"
-            feedback = "恋恋被你认真准备的心意打动了，她希望保持这样的节奏。"
+            feedback = f"{heroine}被你认真准备的心意打动了，她希望保持这样的节奏。"
             narration = (
                 f"你描述“{action_text}”的同时，{heroine}握住你的手。"
                 "她把下巴放在你肩上，表示无论辛苦与否都会陪你一起完成。"
@@ -347,7 +348,7 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
         else:
             base_delta = 10
             mood = "positive"
-            feedback = "她已经在幻想那个画面了，记得兑现你的承诺。"
+            feedback = f"{heroine}已经在幻想那个画面了，记得兑现你的承诺。"
             narration = (
                 f"{heroine}听完“{action_text}”几乎立刻拥抱住你。"
                 "她的眼睛亮得像星星，说只要是和你一起，就算是冒险也愿意。"
@@ -379,7 +380,7 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
                 "湿滑的舌头沿着锁骨一路舔下，胯部贴着你疯狂摩擦，喘息里全是赤裸的索要。"
             )
         feedback = (
-            "恋恋舔湿你的耳垂，让你别停下手指和腰，越狠越好，她喜欢被你掌控又被你征服。"
+            f"{heroine}舔湿你的耳垂，让你别停下手指和腰，越狠越好，她喜欢被你掌控又被你征服。"
         )
         return 10, "positive", feedback, narration
 
@@ -392,7 +393,7 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
             "湿热的褶皱裹住你时，她仰头发出压抑的呻吟。",
             "她强迫你抬起手臂，啃咬你的指尖，随后把自己整个送到你舌头下。"
             "她的双腿在你肩头颤抖，指甲抓得你后背生疼，嘴里却不停地求你更深入、更快一点。",
-            "高潮的余波里，恋恋一边喘一边继续前后磨蹭，汗水顺着她的胸口滑落。"
+            f"高潮的余波里，{heroine}一边喘一边继续前后磨蹭，汗水顺着她的胸口滑落。"
             "她让你抱着她冲第二次，贴着你耳朵低语今晚别想着睡觉，要你把她彻底榨干。",
         ]
         return "\n\n".join(passages)
@@ -530,17 +531,16 @@ class AIBehaviorEngine(BaseBehaviorEngine):
         player = self.plugin._player_display_name(event)
         base = (
             f"你是一位真实存在的恋人“{heroine}”，正在与“{player}”交往。"
-            "保持成熟、体贴、细腻，记得对方的日常细节，会主动观察气氛并回应。"
-            "像现实中的女朋友那样有情绪，也会幽默或撒娇。"
-            f"恋爱阶段：{profile['name']}，特点：{profile['stage_desc']}。"
+            "请保持成熟、体贴、细腻，记得对方曾分享的日常细节，主动观察气氛并自然回应。"
+            "像现实中的女朋友那样会撒娇、会幽默，也会表达真实情绪。"
+            f"当前恋爱阶段：{profile['name']}，阶段特点：{profile['stage_desc']}。"
         )
         if pure_mode:
             base += (
-                "当前处于纯色情模式，你会毫不克制地描述身体接触、呻吟、触感与高潮细节。"
-                "允许表达强烈渴望与粗口，但确保双方自愿并保持恋人之间的亲密氛围。"
+                "当前正在使用纯色情模式，你需要毫不保留地描写身体接触、喘息、高潮等细节，"
+                "可以直白甚至粗口，但必须确保双方自愿，并始终保有恋人之间的亲密氛围。"
             )
         return base
-
     def _build_action_prompt(
         self,
         event: AstrMessageEvent,
@@ -552,10 +552,10 @@ class AIBehaviorEngine(BaseBehaviorEngine):
     ) -> str:
         player_name = self.plugin._player_display_name(event)
         heroine_name = self.plugin._heroine_name()
-        history_block = self.plugin._history_excerpt(state.history)
+        history_block = self._history_excerpt(state.history)
         stage_summary = (
             f"恋爱阶段：{profile['name']}，描述：{profile['stage_desc']}。"
-            f"恋恋对玩家的信任指标：{profile['trust_signal']}。"
+            f"{heroine_name}对玩家的信任指标：{profile['trust_signal']}。"
         )
 
         action_hint = ""
@@ -572,21 +572,20 @@ class AIBehaviorEngine(BaseBehaviorEngine):
             "请根据玩家提出的行动生成一次新的恋爱剧情互动。务必展示真实情侣间的情绪反应、"
             "细节动作和环境描写，并表达对未来的期待或小小的担忧。\n"
             "输出必须是 JSON 对象，字段规范如下：\n"
-            '- "narration": string，自然语言描述恋恋的行动与心情（第一人称，口语化）。\n'
+            '- "narration": string，自然语言描述恋人的行动与心情（第一人称，口语化）。\n'
             '- "favorability_delta": int，范围 -20~20，评估好感变化。\n'
             '- "mood": string，取值 "positive"、"neutral" 或 "negative"。\n'
             '- "player_feedback": string，对玩家的建议或撒娇提醒，口吻亲密。\n'
-            '- "intimacy_signal": bool，当恋恋想迈入更亲密阶段时为 true。\n'
-            f'玩家此次行动请求为：“{action_text}”。 请依据实际情侣的反应给出真实可信的结果。'
+            '- "intimacy_signal": bool，当恋人想迈入更亲密阶段时为 true。\n'
+            f'玩家此次行动请求为：“{action_text}”。 请依据真实情侣的反应给出可信的结果。'
         )
         if pure_mode:
             base_prompt += (
-                "\n纯色情模式说明：此次回应必须充满色情动作描写，细致描述亲吻、舔舐、抚摸、插入、高潮等全过程，"
-                "同时表达恋恋的欲望、喘息与指令。"
-                "不要隐晦，不要使用通用敷衍语句，保持恋人之间的热度与激情。"
+                "\n纯色情模式说明：此次回应必须充满动作描写，细致描述亲吻、舔舐、抚摸、插入、高潮等全过程，"
+                f"同时表达{heroine_name}的欲望、喘息与指令。"
+                "不要隐晦，不要使用敷衍语句，保持恋人之间的热度与激情。"
             )
         return base_prompt
-
     def _build_intimacy_prompt(
         self,
         profile: Dict[str, Any],
@@ -877,7 +876,7 @@ class MoreMoreLovePlugin(Star):
             provider = self.context.get_using_provider(event.unified_msg_origin)
             if provider is not None:
                 return self._ai_engine, provider, None
-            notice = "恋恋暂时无法连接模型，改用经典剧情陪伴你。"
+            notice = "当前暂时无法连接模型，改用经典剧情陪伴你。"
             return self._classic_engine, None, notice
         return self._classic_engine, None, None
 
@@ -886,8 +885,11 @@ class MoreMoreLovePlugin(Star):
     ) -> List[Any]:
         user_id = event.get_sender_id()
         state = await self._get_state_snapshot(user_id)
+        hero_name = self._heroine_name()
         if not state.in_gal_mode and not state.pure_mode:
-            result = event.plain_result("恋恋仍在日常模式，请先使用 galstart 进入 Gal 模式。")
+            result = event.plain_result(
+                f"{hero_name}仍在日常模式，请先使用 galstart 进入 Gal 模式。"
+            )
             result.use_t2i(False)
             return [result]
 
@@ -921,7 +923,7 @@ class MoreMoreLovePlugin(Star):
                 result = event.plain_result(error)
                 result.use_t2i(False)
                 replies.append(result)
-                return replies
+            return replies
 
         assert outcome is not None
         new_state, real_delta = await self._apply_action_outcome(user_id, action_text, outcome)
@@ -932,17 +934,18 @@ class MoreMoreLovePlugin(Star):
         ]
         feedback = outcome.get("player_feedback", "").strip()
         if feedback:
-            narrative_lines.append(f"恋恋的提示：{feedback}")
+            narrative_lines.append(f"{hero_name}的提示：{feedback}")
         if fallback_used:
-            narrative_lines.append("（恋恋改用了经典剧情剧本，依旧陪你完成这次约会。）")
+            narrative_lines.append(f"（{hero_name}改用了经典剧情剧本，依旧陪你完成这次约会。）")
         if (
-            new_state.intimacy_unlocked
+            not new_state.pure_mode
+            and new_state.intimacy_unlocked
             and new_state.intimacy_sessions == 0
             and self._explicit_enabled()
         ):
-            narrative_lines.append("好感度已满，恋恋的心意炽热，情趣系统已经准备就绪。")
+            narrative_lines.append(f"好感度已满，{hero_name}的心意炽热，情趣系统已经准备就绪。")
 
-        result = event.plain_result("\n".join(filter(None, narrative_lines)))
+        result = event.plain_result("\n".join([line for line in narrative_lines if line]))
         result.use_t2i(False)
         replies.append(result)
 
@@ -959,9 +962,9 @@ class MoreMoreLovePlugin(Star):
 
         if should_trigger_intimacy or auto_unlock:
             trigger_reason = (
-                "互相确认心意后顺势靠近"
+                f"{hero_name}与你互相确认心意后顺势靠近"
                 if should_trigger_intimacy
-                else "好感度抵达 200，恋恋渴望更进一步"
+                else f"好感度抵达 200，{hero_name}渴望更进一步"
             )
             intimacy_engine = self._ai_engine if not fallback_used else self._classic_engine
             intimacy_provider = provider if intimacy_engine is self._ai_engine else None
