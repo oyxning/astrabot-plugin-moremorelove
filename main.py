@@ -11,6 +11,8 @@ from astrbot.api import logger
 from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.star import Context, Star, StarTools, register
 
+from .environment_systems import RealWorldTimeSystem, RealWorldWeatherSystem
+
 MAX_FAVORABILITY = 200
 MIN_FAVORABILITY = 0
 HISTORY_LIMIT = 12
@@ -178,6 +180,29 @@ CLASSIC_PURE_ACTION_LIBRARY: Dict[str, List[str]] = {
     ],
 }
 
+CLASSIC_SOFT_PURE_ACTION_LIBRARY: Dict[str, List[str]] = {
+    "park": [
+        (
+            "{hero}牵着{player}躲到花丛深处，她把外套铺在草地上，贴着你的胸膛轻声撒娇。"
+            "你们在夜风里亲吻，她主动把腿搭在你腰上，悄悄引导你的手滑入她腰线以下的温热处。"
+        ),
+        (
+            "{hero}坐在长椅上把你拉到怀里，她的唇沿着你下颚一路亲吻。"
+            "她让你抱紧她的腰，贴着耳朵请求你再靠近一点，裙摆下柔软的肌肤紧贴着你的大腿。"
+        ),
+    ],
+    "cinema": [
+        (
+            "电影放到最安静的片段时，{hero}主动靠在你肩上，握着你的手指引你进入她衣摆内侧。"
+            "她一边在你耳边呼气一边轻搓你的掌心，湿润的呼吸带着隐秘的渴望。"
+        ),
+        (
+            "{hero}趁着场内黑暗把你拉到最后一排，她跨坐在你腿上，缓慢地贴着你摩擦。"
+            "她让你抱紧她的背，她的指尖悄悄探入你的衬衫，重复着想要你多亲她几下。"
+        ),
+    ],
+}
+
 CUSTOM_POSITIVE_KEYWORDS = {
     "晚餐",
     "惊喜",
@@ -242,8 +267,9 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
         player = self.plugin._player_display_name(event)
 
         if pure_mode:
+            intensity = self.plugin._erotic_intensity()
             delta, mood, feedback, narration = self._pure_mode_outcome(
-                action_text, hero, player, action_id
+                action_text, hero, player, action_id, intensity=intensity
             )
             outcome = {
                 "narration": narration,
@@ -291,11 +317,12 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
         player = self.plugin._player_display_name(event)
 
         if pure_mode:
-            return self._pure_mode_intimacy(hero, player, trigger_reason), None
+            intensity = self.plugin._erotic_intensity()
+            return self._pure_mode_intimacy(hero, player, trigger_reason, intensity), None
 
         profile = self.plugin._relationship_stage(state.favorability)
         if profile["intimacy_bias"] < 0.2:
-            return None, "恋恋还想再确认彼此的心意，再多陪陪她吧。"
+            return None, f"{hero}还想再确认彼此的心意，再多陪陪她吧。"
 
         imagery = profile["intimacy_imagery"]
 
@@ -368,25 +395,52 @@ class ClassicBehaviorEngine(BaseBehaviorEngine):
         heroine: str,
         player: str,
         action_id: Optional[str],
+        intensity: str,
     ) -> Tuple[int, str, str, str]:
-        if action_id and action_id in CLASSIC_PURE_ACTION_LIBRARY:
-            narration = self._random.choice(CLASSIC_PURE_ACTION_LIBRARY[action_id]).format(
+        if intensity == "strong":
+            library = CLASSIC_PURE_ACTION_LIBRARY
+            if action_id and action_id in library:
+                narration = self._random.choice(library[action_id]).format(
+                    hero=heroine, player=player
+                )
+            else:
+                narration = (
+                    f"{heroine}抓住{player}的衣领，把你抵在最近的墙面上，"
+                    f"强迫你用“{action_text}”作为借口满足她的欲望。她解开你的裤链，"
+                    "湿滑的舌头沿着锁骨一路舔下，胯部贴着你疯狂摩擦，喘息里全是赤裸的索要。"
+                )
+            feedback = (
+                f"{heroine}舔湿你的耳垂，让你别停下手指和腰，越狠越好，她喜欢被你掌控又被你征服。"
+            )
+            return 10, "positive", feedback, narration
+        library = CLASSIC_SOFT_PURE_ACTION_LIBRARY
+        if action_id and action_id in library:
+            narration = self._random.choice(library[action_id]).format(
                 hero=heroine, player=player
             )
         else:
             narration = (
-                f"{heroine}抓住{player}的衣领，把你抵在最近的墙面上，"
-                f"强迫你用“{action_text}”作为借口满足她的欲望。她解开你的裤链，"
-                "湿滑的舌头沿着锁骨一路舔下，胯部贴着你疯狂摩擦，喘息里全是赤裸的索要。"
+                f"{heroine}把“{action_text}”当作拥抱你更久的借口，她贴在你怀里缓缓摩擦，"
+                "让你轻轻扶住她的腰，一边低声请求你别停。"
             )
         feedback = (
-            f"{heroine}舔湿你的耳垂，让你别停下手指和腰，越狠越好，她喜欢被你掌控又被你征服。"
+            f"{heroine}提醒你保持节奏，温柔地引导她进入更多亲密，但不用太露骨。"
         )
-        return 10, "positive", feedback, narration
+        return 6, "positive", feedback, narration
 
     def _pure_mode_intimacy(
-        self, heroine: str, player: str, trigger_reason: str
+        self, heroine: str, player: str, trigger_reason: str, intensity: str
     ) -> str:
+        if intensity != "strong":
+            passages = [
+                f"{heroine}把{player}轻轻推倒在床上，顺势跨坐在你腰间。她握着你的手贴在她的腰线上，"
+                f"贴着你耳边轻声说想把“{trigger_reason}”延续得更久，你们慢慢亲吻，她引导你探索她的曲线。",
+                "她躺在你旁边，把腿缠上你的大腿，让你顺着她的呼吸节奏抚摸她的背。"
+                "她的指尖在你胸口画圈，悄悄告诉你她喜欢你掌控节奏的样子。",
+                f"当你们同时达到激情的顶点时，{heroine}把脸埋在你颈窝，呼吸仍然急促，却紧紧抓着你的手。"
+                "她说想和你慢慢拥抱一晚，再听你说一句喜欢她。",
+            ]
+            return "\n\n".join(passages)
         passages = [
             f"{heroine}把{player}拖进卧室，随手反锁。她一边剥开你的上衣，一边把嘴贴在你喉结，"
             f"说想把刚才的“{trigger_reason}”直接续写在床上。她骑坐在你身上，胯骨咬住你的腰线，"
@@ -417,25 +471,35 @@ class AIBehaviorEngine(BaseBehaviorEngine):
             return None, "当前没有可用的 LLM 提供商。"
 
         profile = self.plugin._relationship_stage(state.favorability)
+        intensity = self.plugin._erotic_intensity()
         contexts = self._build_contexts(event, state)
+        environment_brief = await self.plugin._compose_environment_prompt_text(event)
         prompt = self._build_action_prompt(
-            event, state, action_text, profile, action_id, pure_mode
+            event,
+            state,
+            action_text,
+            profile,
+            action_id,
+            pure_mode,
+            intensity,
+            environment_brief,
         )
 
         system_prompt = self.plugin._custom_character_prompt()
-        pure_addon = (
-            "当前处于纯色情模式。你必须以露骨、细腻且富有动作描写的方式回应，"
-            "描述双方的触碰、喘息、体液与感官反馈，绝不含糊其辞。"
-        )
         if pure_mode:
-            system_prompt = (
-                (system_prompt + "\n" if system_prompt else "") + pure_addon
-            )
+            if intensity == "strong":
+                addon = (
+                    "当前处于纯色情模式，请根据配置的强度大胆描写身体互动，"
+                    "同时确保双方自愿、情感真挚。"
+                )
+            else:
+                addon = (
+                    "当前处于纯色情模式（软色情），请保持暧昧与感官细节，"
+                    "但避免过度直白的器官与动词描述，以减少模型拒绝的概率。"
+                )
+            system_prompt = (system_prompt + "\n" if system_prompt else "") + addon
         elif not system_prompt:
             system_prompt = self._default_system_prompt(profile, event, False)
-        elif not pure_mode:
-            # 保留自定义设定
-            system_prompt = system_prompt
 
         raw_text, error = await self._call_llm(
             provider,
@@ -449,12 +513,12 @@ class AIBehaviorEngine(BaseBehaviorEngine):
 
         payload = self._extract_json(raw_text)
         if payload is None:
-            logger.warning("MoreMoreLove 未解析到结构化结果，原始输出：%s", raw_text)
+            logger.warning("MoreMoreLove 未解析到结构化结果，原始内容：%s", raw_text)
             payload = {
                 "narration": raw_text,
                 "favorability_delta": 0,
                 "mood": "neutral",
-                "player_feedback": "恋恋试着表达心情，但系统未能判断具体好感变化。",
+                "player_feedback": "系统未能判定效果，本次好感度保持不变。",
                 "intimacy_signal": False,
             }
 
@@ -466,7 +530,7 @@ class AIBehaviorEngine(BaseBehaviorEngine):
         if pure_mode:
             payload["intimacy_signal"] = True
             if payload["favorability_delta"] == 0:
-                payload["favorability_delta"] = 8
+                payload["favorability_delta"] = 6 if intensity == "soft" else 8
         return payload, None
 
     async def generate_intimacy_scene(
@@ -478,30 +542,31 @@ class AIBehaviorEngine(BaseBehaviorEngine):
         pure_mode: bool = False,
         provider=None,
     ) -> Tuple[Optional[str], Optional[str]]:
+        hero = self.plugin._heroine_name()
         if provider is None:
-            return None, "当前没有可用的 LLM 提供商。"
+            return None, f"{hero}暂时无法连接模型，请稍后重试。"
 
         profile = self.plugin._relationship_stage(state.favorability)
-        hero = self.plugin._heroine_name()
         player = self.plugin._player_display_name(event)
         history = self.plugin._history_excerpt(state.history)
+        intensity = self.plugin._erotic_intensity()
 
         prompt = self._build_intimacy_prompt(
-            profile, trigger_reason, history, pure_mode
+            profile,
+            trigger_reason,
+            history,
+            pure_mode,
+            intensity,
         )
         system_prompt = self.plugin._custom_character_prompt()
         if pure_mode:
-            pure_addon = (
-                f"你是真实的恋人“{hero}”，此刻完全沉溺于欲望。"
-                f"与“{player}”的互动必须极度色情，描述汗水、气味、触感、高潮及余韵，"
-                "保持双方成年且自愿，但不要克制用词。"
+            addon = (
+                f"你是真实的恋人“{hero}”，此刻与“{player}”渴望更亲密的拥抱。"
+                "请根据设定的强度描写激情细节，同时保持双方自愿与情感联结。"
             )
-            system_prompt = (system_prompt + "\n" if system_prompt else "") + pure_addon
+            system_prompt = (system_prompt + "\n" if system_prompt else "") + addon
         elif not system_prompt:
-            system_prompt = (
-                f"你是真实世界的恋人“{hero}”，对“{player}”极其了解。"
-                "保持成熟、细腻、体贴，语言富有画面感，表达渴望同时尊重对方。"
-            )
+            system_prompt = self._default_system_prompt(profile, event, False)
 
         raw_text, error = await self._call_llm(
             provider,
@@ -541,6 +606,7 @@ class AIBehaviorEngine(BaseBehaviorEngine):
                 "可以直白甚至粗口，但必须确保双方自愿，并始终保有恋人之间的亲密氛围。"
             )
         return base
+
     def _build_action_prompt(
         self,
         event: AstrMessageEvent,
@@ -549,6 +615,8 @@ class AIBehaviorEngine(BaseBehaviorEngine):
         profile: Dict[str, Any],
         action_id: Optional[str],
         pure_mode: bool,
+        intensity: str,
+        environment_brief: str,
     ) -> str:
         player_name = self.plugin._player_display_name(event)
         heroine_name = self.plugin._heroine_name()
@@ -566,47 +634,82 @@ class AIBehaviorEngine(BaseBehaviorEngine):
 
         base_prompt = (
             f"你是一位真实存在的成年女友“{heroine_name}”，与你深爱的伴侣“{player_name}”正在恋爱。"
-            f"\n{stage_summary}\n{action_hint}\n"
-            f"玩家当前好感度：{state.favorability}/{MAX_FAVORABILITY}。\n"
-            f"最近互动摘要：\n{history_block}\n\n"
-            "请根据玩家提出的行动生成一次新的恋爱剧情互动。务必展示真实情侣间的情绪反应、"
-            "细节动作和环境描写，并表达对未来的期待或小小的担忧。\n"
-            "输出必须是 JSON 对象，字段规范如下：\n"
-            '- "narration": string，自然语言描述恋人的行动与心情（第一人称，口语化）。\n'
-            '- "favorability_delta": int，范围 -20~20，评估好感变化。\n'
-            '- "mood": string，取值 "positive"、"neutral" 或 "negative"。\n'
-            '- "player_feedback": string，对玩家的建议或撒娇提醒，口吻亲密。\n'
-            '- "intimacy_signal": bool，当恋人想迈入更亲密阶段时为 true。\n'
+            f"
+{stage_summary}
+{action_hint}
+"
+            f"玩家当前好感度：{state.favorability}/{MAX_FAVORABILITY}。
+"
+            f"最近互动摘要：
+{history_block}
+"
+            f"现实世界情报：
+{environment_brief}
+
+"
+            "请根据玩家提出的行动生成一次新的恋爱剧情互动。务必展示真实情侣间的情绪反应，"
+            "细节动作和环境描写，并表达对未来的期待或小小的担忧。
+"
+            "输出必须是 JSON 对象，字段规范如下：
+"
+            '- "narration": string，自然语言描述恋人的行动与心情（第一人称，口语化）。
+'
+            '- "favorability_delta": int，范围 -20~20，评估好感变化。
+'
+            '- "mood": string，取值 "positive"、"neutral" 或 "negative"。
+'
+            '- "player_feedback": string，对玩家的建议或撒娇提醒，口吻亲密。
+'
+            '- "intimacy_signal": bool，当恋人想迈入更亲密阶段时为 true。
+'
             f'玩家此次行动请求为：“{action_text}”。 请依据真实情侣的反应给出可信的结果。'
         )
-        if pure_mode:
+        if pure_mode and intensity == "strong":
             base_prompt += (
-                "\n纯色情模式说明：此次回应必须充满动作描写，细致描述亲吻、舔舐、抚摸、插入、高潮等全过程，"
+                "
+纯色情模式说明：此次回应必须充满动作描写，细致描写亲吻、舔舐、抚摸、插入、高潮等全过程，"
                 f"同时表达{heroine_name}的欲望、喘息与指令。"
                 "不要隐晦，不要使用敷衍语句，保持恋人之间的热度与激情。"
             )
+        elif pure_mode and intensity == "soft":
+            base_prompt += (
+                "
+纯色情模式（软色情）说明：请保持浓烈的暧昧氛围，描述亲吻、抚摸与身体贴合，"
+                "可暗示欲望但避免过度具体的器官与动作描写，以减少模型拒绝概率。"
+            )
         return base_prompt
+
     def _build_intimacy_prompt(
         self,
         profile: Dict[str, Any],
         trigger_reason: str,
         history: str,
         pure_mode: bool,
+        intensity: str,
     ) -> str:
         if pure_mode:
+            if intensity == "strong":
+                return (
+                    f"恋爱阶段：{profile['name']}，描述：{profile['stage_desc']}\n"
+                    f"触发理由：{trigger_reason}\n"
+                    f"参考最近互动：\n{history}\n"
+                    "生成 3-4 段极度色情的亲密互动文本。使用第一人称（女主）和第二人称（玩家）。"
+                    "务必详细描写身体交缠、插入、摩擦、体液、高潮与余韵，语言可以直白甚至粗口，但要保持双方自愿。"
+                    "不要输出 JSON，仅输出正文。"
+                )
             return (
                 f"恋爱阶段：{profile['name']}，描述：{profile['stage_desc']}\n"
                 f"触发理由：{trigger_reason}\n"
                 f"参考最近互动：\n{history}\n"
-                "生成 3-4 段极度色情的亲密互动文本。使用第一人称（恋恋）和第二人称（玩家）。"
-                "务必详细描写身体交缠、插入、摩擦、体液、高潮与余韵，语言可以粗粝但要保持恋人关系的亲密度。"
+                "生成 3-4 段软色情的亲密互动文本。使用第一人称（女主）和第二人称（玩家）。"
+                "请突出亲吻、抚摸、呼吸与暧昧对话，可暗示欲望但避免直接描写敏感器官或激烈性交动作，确保模型不会拒绝。"
                 "不要输出 JSON，仅输出正文。"
             )
         return (
             f"恋爱阶段：{profile['name']}，描述：{profile['stage_desc']}\n"
             f"触发理由：{trigger_reason}\n"
             f"参考最近互动：\n{history}\n"
-            "请用第一人称（代表恋恋）与第二人称（代表玩家）写出 3-4 段亲密互动，"
+            "请用第一人称（代表女主）与第二人称（代表玩家）写出 3-4 段亲密互动，"
             "强调情绪与肢体细节，保持双方成年且自愿。"
             "语言可以火热但维持优雅，需包含亲密对话、触碰、感官描写和事后安抚。"
             "不要输出 JSON，仅输出正文。"
@@ -621,6 +724,7 @@ class AIBehaviorEngine(BaseBehaviorEngine):
         contexts: Optional[List[Dict[str, str]]] = None,
         system_prompt: Optional[str] = None,
     ) -> Tuple[Optional[str], Optional[str]]:
+        hero = self.plugin._heroine_name()
         try:
             response = await provider.text_chat(
                 prompt=prompt,
@@ -630,11 +734,11 @@ class AIBehaviorEngine(BaseBehaviorEngine):
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning("MoreMoreLove 调用 LLM 失败：%s", exc)
-            return None, f"恋恋没有获得 AI 的回应：{exc}"
+            return None, f"{hero}没有获得 AI 的回应：{exc}"
 
         text = response.completion_text.strip()
         if not text:
-            return None, "AI 沉默不语，恋恋暂时没有回复。"
+            return None, f"AI 沉默不语，{hero}暂时没有回复。"
         return text, None
 
     def _extract_json(self, text: str) -> Optional[Dict[str, Any]]:
@@ -660,8 +764,6 @@ class AIBehaviorEngine(BaseBehaviorEngine):
                             break
             start = text.find("{", start + 1)
         return None
-
-
 @register(
     "moremorelove",
     "LumineStory",
@@ -680,6 +782,14 @@ class MoreMoreLovePlugin(Star):
 
         self._classic_engine = ClassicBehaviorEngine(self)
         self._ai_engine = AIBehaviorEngine(self)
+
+        tz_name = str(self._config.get("time_zone", "Asia/Shanghai") or "Asia/Shanghai")
+        self._time_system = RealWorldTimeSystem(tz_name)
+        weather_location = str(self._config.get("weather_location", "") or "").strip()
+        refresh_minutes = int(self._config.get("weather_refresh_minutes", 60) or 60)
+        self._weather_system = RealWorldWeatherSystem(
+            default_location=weather_location, refresh_minutes=refresh_minutes
+        )
 
     async def initialize(self):
         await self._load_state()
@@ -712,11 +822,47 @@ class MoreMoreLovePlugin(Star):
     def _pure_mode_allowed(self) -> bool:
         return bool(self._config.get("allow_pure_erotic_mode", False))
 
+    def _erotic_intensity(self) -> str:
+        value = str(self._config.get("erotic_intensity", "soft")).lower().strip()
+        if value not in {"soft", "strong"}:
+            return "soft"
+        return value
+
+    def _default_weather_location(self) -> str:
+        return str(self._config.get("weather_location", "") or "").strip()
+
+    def _time_summary(self) -> str:
+        return self._time_system.get_summary()
+
+    async def _weather_summary(self, location: Optional[str] = None) -> str:
+        try:
+            info = await self._weather_system.get_weather(location or self._default_weather_location())
+            return info.brief()
+        except Exception as exc:
+            logger.warning("获取天气信息失败：%s", exc)
+            return "天气信息获取失败"
+
+    async def _environment_context_lines(self, event: AstrMessageEvent) -> List[str]:
+        lines = [f"当地时间：{self._time_summary()}"]
+        weather_line = await self._weather_summary()
+        lines.append(f"天气概况：{weather_line}")
+        return lines
+
+    async def _compose_environment_prompt_text(self, event: AstrMessageEvent) -> str:
+        lines = await self._environment_context_lines(event)
+        return "\n".join(lines)
+
+    async def _environment_brief(self, event: AstrMessageEvent) -> str:
+        time_text = self._time_summary()
+        weather_text = await self._weather_summary()
+        return f"当前时间：{time_text}\n当前天气：{weather_text}"
+
+
     def _relationship_stage(self, favorability: int) -> Dict[str, Any]:
         if favorability < 80:
             return {
                 "name": "暧昧期",
-                "stage_desc": "你们还在摸索彼此的节奏，恋恋喜欢慢慢靠近的过程。",
+                "stage_desc": "你们还在摸索彼此的节奏，她喜欢慢慢靠近的过程。",
                 "stage_keyword": "期待",
                 "affinity_bonus": 0,
                 "intimacy_bias": 0.1,
@@ -727,7 +873,7 @@ class MoreMoreLovePlugin(Star):
         if favorability < 140:
             return {
                 "name": "依恋期",
-                "stage_desc": "彼此已经习惯对方的存在，恋恋会主动依靠你。",
+                "stage_desc": "彼此已经习惯对方的存在，她会主动依靠你。",
                 "stage_keyword": "柔软",
                 "affinity_bonus": 1,
                 "intimacy_bias": 0.2,
@@ -737,7 +883,7 @@ class MoreMoreLovePlugin(Star):
             }
         return {
             "name": "热恋期",
-            "stage_desc": "心意完全敞开，恋恋喜欢黏在你身边计划未来。",
+            "stage_desc": "心意完全敞开，她喜欢黏在你身边计划未来。",
             "stage_keyword": "炽热",
             "affinity_bonus": 2,
             "intimacy_bias": 0.35,
@@ -816,9 +962,9 @@ class MoreMoreLovePlugin(Star):
             action = item.get("action", "未知行动")
             narration = item.get("narration", "").strip()
             delta = int(item.get("delta", 0))
-            segments.append(
-                f"玩家行动：{action}\n恋恋回应：{narration}\n好感变化：{delta:+d}"
-            )
+        segments.append(
+            f"玩家行动：{action}\n角色回应：{narration}\n好感变化：{delta:+d}"
+        )
         return "\n\n".join(segments)
 
     async def _apply_action_outcome(
@@ -850,6 +996,7 @@ class MoreMoreLovePlugin(Star):
         return new_state, delta
 
     async def _record_intimacy_session(self, user_id: str, narration: str):
+        hero = self._heroine_name()
         async with self._state_lock:
             state = self._player_states.setdefault(user_id, PlayerState())
             state.intimacy_unlocked = True
@@ -862,7 +1009,7 @@ class MoreMoreLovePlugin(Star):
                     "narration": narration,
                     "delta": 0,
                     "mood": "intimacy",
-                    "feedback": "恋恋与你共同沉浸在亲密时光中。",
+                    "feedback": f"{hero}与你共同沉浸在亲密时光中。",
                 }
             )
             if len(state.history) > HISTORY_LIMIT:
@@ -991,7 +1138,9 @@ class MoreMoreLovePlugin(Star):
     async def _render_status_card(
         self, event: AstrMessageEvent, state: PlayerState
     ) -> List[Any]:
-        summary = self._build_status_text(event, state)
+        time_summary = self._time_summary()
+        weather_info = await self._weather_summary()
+        summary = self._build_status_text(event, state, time_summary, weather_info)
         if not self._status_card_use_t2i():
             result = event.plain_result(summary)
             result.use_t2i(False)
@@ -1008,7 +1157,13 @@ class MoreMoreLovePlugin(Star):
             fallback.use_t2i(False)
             return [fallback]
 
-    def _build_status_text(self, event: AstrMessageEvent, state: PlayerState) -> str:
+    def _build_status_text(
+        self,
+        event: AstrMessageEvent,
+        state: PlayerState,
+        time_summary: str,
+        weather_summary: str,
+    ) -> str:
         hero = self._heroine_name()
         player = self._player_display_name(event)
         stage = self._relationship_stage(state.favorability)
@@ -1019,6 +1174,8 @@ class MoreMoreLovePlugin(Star):
             f"恋爱阶段：{stage['name']} ({stage['stage_desc']})",
             f"恋爱模式：{'开启' if state.in_gal_mode else '关闭'}",
             f"好感度：{state.favorability}/{MAX_FAVORABILITY}",
+            f"当前时间：{time_summary}",
+            f"当前天气：{weather_summary}",
         ]
         if state.intimacy_unlocked:
             lines.append(f"情趣系统：已解锁（互动次数 {state.intimacy_sessions}）")
@@ -1029,9 +1186,11 @@ class MoreMoreLovePlugin(Star):
         if state.history:
             lines.append(f"她的心情：{stage['stage_keyword']}地想着你")
         lines.append(f"色情互动开关：{'开启' if self._explicit_enabled() else '关闭'}")
-        lines.append(f"纯色情模式：{'开启' if state.pure_mode else '关闭'}")
+        intensity_label = "软色情" if self._erotic_intensity() == "soft" else "强色情"
+        lines.append(f"纯色情模式：{'开启' if state.pure_mode else '关闭'}（强度：{intensity_label}）")
         lines.append(f"AI 行为系统：{'开启' if self._ai_behavior_enabled() else '关闭'}")
-        return "\n".join(lines)
+        return "
+".join(lines)
 
     @filter.command("galmenu")
     async def gal_menu(self, event: AstrMessageEvent):
@@ -1044,12 +1203,15 @@ class MoreMoreLovePlugin(Star):
             "galstatus：查看当前状态\n"
             "galreset：重置本会话进度\n"
             "galpure <on/off/status>：切换纯色情模式（仅限成年人）\n"
+            "【环境信息】\n"
+            "galtime：查看当前现实时间\n"
+            "galweather [地点]：查看天气（可选地点参数）\n"
             "【AI 行动】\n"
-            "galpark：和恋恋去公园散步\n"
-            "galcinema：邀恋恋去看电影\n"
+            f"galpark：和{hero}去公园散步\n"
+            f"galcinema：邀{hero}去看电影\n"
             "galact <行动>：自定义行动，如“galact 准备烛光晚餐”\n"
             "galintimacy：在满足条件时主动触发情趣系统\n"
-            "（当未配置 AI 时会自动改用经典剧本，依旧影响好感度。）"
+            "（当未配置 AI 时会自动改用经典剧情，依旧影响好感度。）"
         )
         result = event.plain_result(menu)
         result.use_t2i(False)
@@ -1058,22 +1220,23 @@ class MoreMoreLovePlugin(Star):
     @filter.command("galstart")
     async def gal_start(self, event: AstrMessageEvent):
         user_id = event.get_sender_id()
+        hero = self._heroine_name()
 
         def mutate(state: PlayerState):
             if state.in_gal_mode:
                 return False
             state.in_gal_mode = True
-            state.last_action = "开启恋恋的 Gal 模式"
+            state.last_action = f"开启{hero}的 Gal 模式"
             return True
 
         new_state, changed = await self._mutate_state(user_id, mutate)
         if changed:
             message = (
-                f"恋恋轻轻握住你的手：从现在起，我们的故事正式开始。当前好感度为 "
+                f"{hero}轻轻握住你的手：从现在起，我们的故事正式开始。当前好感度为 "
                 f"{new_state.favorability}/{MAX_FAVORABILITY}。"
             )
         else:
-            message = "恋恋早已全神贯注地看着你，我们已经在 Gal 模式中啦。"
+            message = f"{hero}早已全神贯注地看着你，我们已经在 Gal 模式中啦。"
         result = event.plain_result(message)
         result.use_t2i(False)
         yield result
@@ -1081,6 +1244,7 @@ class MoreMoreLovePlugin(Star):
     @filter.command("galexit")
     async def gal_exit(self, event: AstrMessageEvent):
         user_id = event.get_sender_id()
+        hero = self._heroine_name()
 
         def mutate(state: PlayerState):
             if not state.in_gal_mode:
@@ -1090,9 +1254,9 @@ class MoreMoreLovePlugin(Star):
 
         _, changed = await self._mutate_state(user_id, mutate)
         if changed:
-            message = "恋恋点了点头：那就暂时回到日常状态吧，随时呼唤我回来。"
+            message = f"{hero}点了点头：那就暂时回到日常状态吧，随时呼唤我回来。"
         else:
-            message = "恋恋一直在日常模式，如果想恋爱请先 galstart 哟。"
+            message = f"{hero}一直在日常模式，如果想恋爱请先 galstart 哟。"
         result = event.plain_result(message)
         result.use_t2i(False)
         yield result
@@ -1104,6 +1268,28 @@ class MoreMoreLovePlugin(Star):
         for result in await self._render_status_card(event, state):
             yield result
 
+    @filter.command("galtime")
+    async def gal_time(self, event: AstrMessageEvent):
+        hero = self._heroine_name()
+        summary = self._time_summary()
+        result = event.plain_result(f"{hero}看了看窗外的光线：当前时间是 {summary}")
+        result.use_t2i(False)
+        yield result
+
+    @filter.command("galweather")
+    async def gal_weather(self, event: AstrMessageEvent):
+        hero = self._heroine_name()
+        tokens = self.parse_commands(event.message_str)
+        location = " ".join(tokens.tokens[1:]).strip() if tokens.len > 1 else ""
+        summary = await self._weather_summary(location or None)
+        if location:
+            message = f"{hero}查到了 {location} 的天气：{summary}"
+        else:
+            message = f"{hero}查到了天气概况：{summary}"
+        result = event.plain_result(message)
+        result.use_t2i(False)
+        yield result
+
     @filter.command("galreset")
     async def gal_reset(self, event: AstrMessageEvent):
         user_id = event.get_sender_id()
@@ -1111,7 +1297,8 @@ class MoreMoreLovePlugin(Star):
             self._player_states[user_id] = PlayerState()
             await self._persist_state_locked()
 
-        result = event.plain_result("恋恋重新整理了记忆，一切从零开始。")
+        hero = self._heroine_name()
+        result = event.plain_result(f"{hero}重新整理了记忆，一切从零开始。")
         result.use_t2i(False)
         yield result
 
@@ -1129,6 +1316,9 @@ class MoreMoreLovePlugin(Star):
         sub_cmd = (tokens.get(1) or "").lower()
         user_id = event.get_sender_id()
         state = await self._get_state_snapshot(user_id)
+        intensity = self._erotic_intensity()
+        intensity_label = "软色情" if intensity == "soft" else "强色情"
+        hero = self._heroine_name()
 
         if sub_cmd in {"on", "enable", "start"}:
             def mutate(s: PlayerState):
@@ -1137,8 +1327,7 @@ class MoreMoreLovePlugin(Star):
 
             await self._mutate_state(user_id, mutate)
             result = event.plain_result(
-                "恋恋贴在你耳边，用火热的语气说：今晚进入纯色情模式，只属于成年人。"
-                "从现在起所有互动都会直白描写你的每一次触摸与进入。"
+                f"已开启纯色情模式（当前强度：{intensity_label}）。{hero}贴在你耳边提醒：这是只属于成年人的密语，请确认周围环境安全。"
             )
         elif sub_cmd in {"off", "disable", "stop"}:
             def mutate(s: PlayerState):
@@ -1146,13 +1335,13 @@ class MoreMoreLovePlugin(Star):
 
             await self._mutate_state(user_id, mutate)
             result = event.plain_result(
-                "恋恋轻轻吐出一口气：纯色情模式已关闭，我们可以慢慢来，继续享受普通恋爱。"
+                f"纯色情模式已关闭，{hero}握住你的手：我们可以慢慢来，继续享受普通恋爱。"
             )
-        elif sub_cmd == "status" or sub_cmd == "":
+        elif sub_cmd in {"status", ""}:
             status = "已开启" if state.pure_mode else "未开启"
             result = event.plain_result(
-                f"纯色情模式当前状态：{status}。"
-                "开启后恋恋会无条件满足你的所有成人需求，请确保周围环境安全且无未成年人。"
+                f"纯色情模式当前状态：{status}（默认强度：{intensity_label}）。"
+                f"开启时{hero}会按照配置的强度描述亲密细节，若需更换强度请在插件配置中调整 `erotic_intensity`。"
             )
         else:
             result = event.plain_result(
@@ -1164,12 +1353,16 @@ class MoreMoreLovePlugin(Star):
 
     @filter.command("galpark")
     async def gal_park(self, event: AstrMessageEvent):
-        for reply in await self._handle_action(event, "与恋恋在公园并肩散步，分享彼此心事", action_id="park"):
+        hero = self._heroine_name()
+        action_text = f"与{hero}在公园并肩散步，分享彼此心事"
+        for reply in await self._handle_action(event, action_text, action_id="park"):
             yield reply
 
     @filter.command("galcinema")
     async def gal_cinema(self, event: AstrMessageEvent):
-        for reply in await self._handle_action(event, "邀请恋恋去电影院看浪漫影片", action_id="cinema"):
+        hero = self._heroine_name()
+        action_text = f"邀请{hero}去电影院看浪漫影片"
+        for reply in await self._handle_action(event, action_text, action_id="cinema"):
             yield reply
 
     @filter.command("galact")
@@ -1194,13 +1387,14 @@ class MoreMoreLovePlugin(Star):
     async def gal_intimacy(self, event: AstrMessageEvent):
         user_id = event.get_sender_id()
         state = await self._get_state_snapshot(user_id)
+        hero = self._heroine_name()
         if not state.in_gal_mode and not state.pure_mode:
-            result = event.plain_result("恋恋尚未进入 Gal 模式，先使用 galstart 吧。")
+            result = event.plain_result(f"{hero}尚未进入 Gal 模式，先使用 galstart 吧。")
             result.use_t2i(False)
             yield result
             return
         if not state.pure_mode and state.favorability < MAX_FAVORABILITY:
-            result = event.plain_result("恋恋还需要更多的心动时刻，至少达到 200 好感度后再试。")
+            result = event.plain_result(f"{hero}还需要更多的心动时刻，至少达到 200 好感度后再试。")
             result.use_t2i(False)
             yield result
             return
@@ -1237,7 +1431,7 @@ class MoreMoreLovePlugin(Star):
             result = event.plain_result(intimacy_text)
             result.use_t2i(False)
             if fallback_used:
-                appended = event.plain_result("（恋恋改用经典剧本陪你完成这段亲密时光。）")
+                appended = event.plain_result(f"（{hero}改用经典剧本陪你完成这段亲密时光。）")
                 appended.use_t2i(False)
                 yield appended
             yield result
