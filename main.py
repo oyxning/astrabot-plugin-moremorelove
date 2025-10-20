@@ -607,6 +607,7 @@ class AIBehaviorEngine(BaseBehaviorEngine):
             )
         return base
 
+
     def _build_action_prompt(
         self,
         event: AstrMessageEvent,
@@ -633,52 +634,34 @@ class AIBehaviorEngine(BaseBehaviorEngine):
             action_hint = "动作类型：观影约会 / 共享影片情绪。"
 
         base_prompt = (
-            f"你是一位真实存在的成年女友“{heroine_name}”，与你深爱的伴侣“{player_name}”正在恋爱。"
-            f"
-{stage_summary}
-{action_hint}
-"
-            f"玩家当前好感度：{state.favorability}/{MAX_FAVORABILITY}。
-"
-            f"最近互动摘要：
-{history_block}
-"
-            f"现实世界情报：
-{environment_brief}
-
-"
+            f"你是一位真实存在的成年女友“{heroine_name}”，与你深爱的伴侣“{player_name}”正在恋爱。\n"
+            f"{stage_summary}\n"
+            f"{action_hint}\n"
+            f"玩家当前好感度：{state.favorability}/{MAX_FAVORABILITY}。\n"
+            f"最近互动摘要：\n{history_block}\n"
+            f"现实世界情报：\n{environment_brief}\n\n"
             "请根据玩家提出的行动生成一次新的恋爱剧情互动。务必展示真实情侣间的情绪反应，"
-            "细节动作和环境描写，并表达对未来的期待或小小的担忧。
-"
-            "输出必须是 JSON 对象，字段规范如下：
-"
-            '- "narration": string，自然语言描述恋人的行动与心情（第一人称，口语化）。
-'
-            '- "favorability_delta": int，范围 -20~20，评估好感变化。
-'
-            '- "mood": string，取值 "positive"、"neutral" 或 "negative"。
-'
-            '- "player_feedback": string，对玩家的建议或撒娇提醒，口吻亲密。
-'
-            '- "intimacy_signal": bool，当恋人想迈入更亲密阶段时为 true。
-'
+            "细节动作和环境描写，并表达对未来的期待或小小的担忧。\n"
+            "输出必须是 JSON 对象，字段规范如下：\n"
+            '- "narration": string，自然语言描述恋人的行动与心情（第一人称，口语化）。\n'
+            '- "favorability_delta": int，范围 -20~20，评估好感变化。\n'
+            '- "mood": string，取值 "positive"、"neutral" 或 "negative"。\n'
+            '- "player_feedback": string，对玩家的建议或撒娇提醒，口吻亲密。\n'
+            '- "intimacy_signal": bool，当恋人想迈入更亲密阶段时为 true。\n'
             f'玩家此次行动请求为：“{action_text}”。 请依据真实情侣的反应给出可信的结果。'
         )
         if pure_mode and intensity == "strong":
             base_prompt += (
-                "
-纯色情模式说明：此次回应必须充满动作描写，细致描写亲吻、舔舐、抚摸、插入、高潮等全过程，"
+                "纯色情模式说明：此次回应必须充满动作描写，细致描写亲吻、舔舐、抚摸、插入、高潮等全过程，"
                 f"同时表达{heroine_name}的欲望、喘息与指令。"
                 "不要隐晦，不要使用敷衍语句，保持恋人之间的热度与激情。"
             )
         elif pure_mode and intensity == "soft":
             base_prompt += (
-                "
-纯色情模式（软色情）说明：请保持浓烈的暧昧氛围，描述亲吻、抚摸与身体贴合，"
+                "纯色情模式（软色情）说明：请保持浓烈的暧昧氛围，描述亲吻、抚摸与身体贴合，"
                 "可暗示欲望但避免过度具体的器官与动作描写，以减少模型拒绝概率。"
             )
         return base_prompt
-
     def _build_intimacy_prompt(
         self,
         profile: Dict[str, Any],
@@ -1189,8 +1172,7 @@ class MoreMoreLovePlugin(Star):
         intensity_label = "软色情" if self._erotic_intensity() == "soft" else "强色情"
         lines.append(f"纯色情模式：{'开启' if state.pure_mode else '关闭'}（强度：{intensity_label}）")
         lines.append(f"AI 行为系统：{'开启' if self._ai_behavior_enabled() else '关闭'}")
-        return "
-".join(lines)
+        return "\n".join(lines)
 
     @filter.command("galmenu")
     async def gal_menu(self, event: AstrMessageEvent):

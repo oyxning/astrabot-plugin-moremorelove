@@ -57,7 +57,7 @@
   },
   "weather_refresh_minutes": {
     "description": "Minutes to cache weather responses (minimum 10 minutes)",
-    "type": "integer",
+    "type": "int",
     "default": 60,
     "minimum": 10
   }
